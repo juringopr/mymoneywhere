@@ -1,1 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DCA Backtest</title>
+<link rel="stylesheet" href="/static/styles.css" />
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+<div class="container">
+<h1>DCA Backtest (Top‑10 Market Cap)</h1>
+<form method="post" action="/backtest" class="card">
+<label>아낄 수 있었던 금액 (총액, USD):
+<input type="number" name="total_amount" step="0.01" required placeholder="e.g., 5000" />
+</label>
+<label>주기(Frequency):
+<select name="freq">
+<option value="D">일(D)</option>
+<option value="W" selected>주(W)</option>
+<option value="M">월(M)</option>
+</select>
+</label>
+<label>기간 개수(N):
+<input type="number" name="n_periods" min="1" max="520" value="52" />
+</label>
+<label class="inline">
+<input type="checkbox" name="use_live_top10" /> 실시간 Top10 (Finnhub 필요)
+</label>
+<button type="submit">확인</button>
+</form>
 
+
+{% if result %}
+<div class="grid">
+<div class="card">
+<h2>결과 요약</h2>
+<p>티커: {{ result.tickers | join(", ") }}</p>
+<p>투자원금: <b>{{ '{:,.2f}'.format(result.invested) }}</b></p>
+<p>현재평가: <b>{{ '{:,.2f}'.format(result.current_value) }}</b></p>
+<p>P/L: <b>{{ '{:,.2f}'.format(result.pl) }}</b>
+(수익률: <b>{{ '{:.2%}'.format(result.ret) }}</b>)</p>
+</div>
+<div class="card">
+<h2>포트폴리오 추이</h2>
+<div id="chart" style="height:420px"></div>
+<script>
+const fig = {{ result.plot_json | safe }};
+Plotly.newPlot('chart', fig.data, fig.layout, {responsive: true});
+</script>
+</div>
+<div class="card">
+<h2>보유 내역</h2>
+{{ result.holdings_html | safe }}
+</div>
+<div class="card">
+<h2>매수 이력</h2>
+{{ result.cashflows_html | safe }}
+</div>
+</div>
+{% endif %}
+</html>
